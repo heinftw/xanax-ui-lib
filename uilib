@@ -578,19 +578,20 @@ end
 function Library:Popup(opts)
     local c = self.colors
     local modal = mk("Frame", {Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, BorderSizePixel = 0, Active = true, ZIndex = 10}, self.gui)
-    local pop = mk("Frame", {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(420, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = c.black, BorderSizePixel = 0, Active = true, ZIndex = 11}, modal)
+    local pop = mk("Frame", {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(420, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = c.black, BorderSizePixel = 0, ClipsDescendants = true, Active = true, ZIndex = 11}, modal)
     corner(pop, 10)
-    local bg = mk("ImageLabel", {Size = UDim2.new(1, 0, 0, 140), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.4, ScaleType = Enum.ScaleType.Crop, ZIndex = 11}, pop)
+    local bg = mk("ImageLabel", {Size = UDim2.new(1, 0, 0, 120), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.35, ScaleType = Enum.ScaleType.Crop, LayoutOrder = 1, ZIndex = 11}, pop)
     corner(bg, 10)
-    mk("UIPadding", {PaddingLeft = UDim.new(0, 16), PaddingRight = UDim.new(0, 16), PaddingTop = UDim.new(0, 14), PaddingBottom = UDim.new(0, 16)}, pop)
-    mk("UIListLayout", {Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center}, pop)
-    local ttl = mk("TextLabel", {Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 20, ZIndex = 12, LayoutOrder = 1}, pop)
+    local content = mk("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, LayoutOrder = 2, ZIndex = 12}, pop)
+    mk("UIPadding", {PaddingLeft = UDim.new(0, 16), PaddingRight = UDim.new(0, 16), PaddingTop = UDim.new(0, 14), PaddingBottom = UDim.new(0, 16)}, content)
+    mk("UIListLayout", {Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center}, content)
+    local ttl = mk("TextLabel", {Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 20, ZIndex = 12, LayoutOrder = 1}, content)
     self:addCycle(ttl)
     if opts.Sub then
-        mk("TextLabel", {Size = UDim2.new(1, 0, 0, 14), BackgroundTransparency = 1, Text = opts.Sub, FontFace = self.font, TextSize = 12, TextColor3 = c.sub, ZIndex = 12, LayoutOrder = 2}, pop)
+        mk("TextLabel", {Size = UDim2.new(1, 0, 0, 14), BackgroundTransparency = 1, Text = opts.Sub, FontFace = self.font, TextSize = 12, TextColor3 = c.sub, ZIndex = 12, LayoutOrder = 2}, content)
     end
-    mk("TextLabel", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 14, TextColor3 = c.text, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 12, LayoutOrder = 3}, pop)
-    local btnRow = mk("Frame", {Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, ZIndex = 12, LayoutOrder = 4}, pop)
+    mk("TextLabel", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 14, TextColor3 = c.text, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top, ZIndex = 12, LayoutOrder = 3}, content)
+    local btnRow = mk("Frame", {Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, ZIndex = 12, LayoutOrder = 4}, content)
     mk("UIListLayout", {FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center}, btnRow)
     for _, b in ipairs(opts.Buttons or {{"ok shhh"}}) do
         local bt, bcb = b[1], b[2]
