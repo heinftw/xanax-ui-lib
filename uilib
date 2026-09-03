@@ -1,4 +1,3 @@
-print("[xanax] ui lib loaded")
 local plrs, uis = game:GetService("Players"), game:GetService("UserInputService")
 local ts, rs = game:GetService("TweenService"), game:GetService("RunService")
 local http, ssvc = game:GetService("HttpService"), game:GetService("SoundService")
