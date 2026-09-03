@@ -1,3 +1,4 @@
+print("[xanax] ui lib loaded")
 local plrs, uis = game:GetService("Players"), game:GetService("UserInputService")
 local ts, rs = game:GetService("TweenService"), game:GetService("RunService")
 local http, ssvc = game:GetService("HttpService"), game:GetService("SoundService")
@@ -18,7 +19,7 @@ local function fmt(v)
     return v % 1 == 0 and tostring(math.floor(v)) or string.format("%.1f", v)
 end
 
-local Library = {Version = "2.0"}
+local Library = {}
 Library.__index = Library
 
 local Tab = {}
@@ -246,9 +247,8 @@ function Library:Window(opts)
     corner(bg, 8)
     local bar = mk("Frame", {Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = c.bar, BackgroundTransparency = 0.25, BorderSizePixel = 0}, frame)
     corner(bar, 8)
-    local ttl = mk("TextLabel", {Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(12, 0), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left}, bar)
+    local ttl = mk("TextLabel", {Size = UDim2.new(1, -80, 1, 0), Position = UDim2.fromOffset(12, 0), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left}, bar)
     self:addCycle(ttl)
-    mk("TextLabel", {Position = UDim2.new(1, -88, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1, Text = "v" .. Library.Version, FontFace = self.font, TextSize = 10, TextColor3 = c.sub}, bar)
     local minBtn = mk("TextButton", {Size = UDim2.fromOffset(24, 24), Position = UDim2.new(1, -56, 0.5, -12), BackgroundColor3 = c.off, Text = "-", FontFace = self.font, TextSize = 14, TextColor3 = c.text}, bar)
     corner(minBtn, 6)
     local closeBtn = mk("TextButton", {Size = UDim2.fromOffset(24, 24), Position = UDim2.new(1, -28, 0.5, -12), BackgroundColor3 = c.off, Text = "x", FontFace = self.font, TextSize = 14, TextColor3 = c.text}, bar)
@@ -556,21 +556,21 @@ function Library:Notify(opts)
     local c = self.colors
     local holder = self.gui:FindFirstChild("_notifs")
     if not holder then
-        holder = mk("Frame", {Position = UDim2.new(1, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Size = UDim2.fromOffset(300, 400), BackgroundTransparency = 1}, self.gui)
-        mk("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center, HorizontalAlignment = Enum.HorizontalAlignment.Right}, holder)
+        holder = mk("Frame", {Position = UDim2.new(1, -16, 1, -16), AnchorPoint = Vector2.new(1, 1), Size = UDim2.fromOffset(320, 400), BackgroundTransparency = 1}, self.gui)
+        mk("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Bottom, HorizontalAlignment = Enum.HorizontalAlignment.Right}, holder)
     end
-    local wrap = mk("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1}, holder)
-    local card = mk("Frame", {Size = UDim2.fromScale(1, 1), Position = UDim2.fromOffset(310, 0), BackgroundColor3 = c.black, BorderSizePixel = 0}, wrap)
+    local wrap = mk("Frame", {Size = UDim2.new(1, 0, 0, 40), BackgroundTransparency = 1}, holder)
+    local card = mk("Frame", {Size = UDim2.fromScale(1, 1), Position = UDim2.fromOffset(330, 0), BackgroundColor3 = c.black, BorderSizePixel = 0}, wrap)
     corner(card, 8)
     local bg = mk("ImageLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.5}, card)
     corner(bg, 8)
-    local ttl = mk("TextLabel", {Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(70, 1), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
+    local ttl = mk("TextLabel", {Position = UDim2.fromOffset(12, 0), Size = UDim2.fromOffset(84, 1), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
     self:addCycle(ttl)
-    mk("Frame", {Position = UDim2.fromOffset(84, 9), Size = UDim2.fromOffset(1, 16), BackgroundColor3 = c.track, BorderSizePixel = 0}, card)
-    mk("TextLabel", {Position = UDim2.fromOffset(92, 0), Size = UDim2.new(1, -102, 1, 0), BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 12, TextColor3 = c.text, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
+    mk("Frame", {Position = UDim2.fromOffset(100, 10), Size = UDim2.fromOffset(1, 20), BackgroundColor3 = c.track, BorderSizePixel = 0}, card)
+    mk("TextLabel", {Position = UDim2.fromOffset(108, 0), Size = UDim2.new(1, -120, 1, 0), BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 15, TextColor3 = c.text, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
     ts:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(0, 0)}):Play()
     task.delay(opts.Time or 4, function()
-        ts:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.fromOffset(310, 0)}):Play()
+        ts:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.fromOffset(330, 0)}):Play()
         task.wait(0.25)
         wrap:Destroy()
     end)
