@@ -240,7 +240,7 @@ function Library:Window(opts)
     local c = self.colors
     local w, h = opts.Width or 300, opts.Height or 420
     local win = {lib = self, tabs = {}}
-    local frame = mk("Frame", {Size = UDim2.fromOffset(w, h), Position = opts.Position or UDim2.new(0.5, -w / 2, 0.5, -h / 2), BackgroundColor3 = c.black, BorderSizePixel = 0, Active = true}, self.gui)
+    local frame = mk("Frame", {Size = UDim2.fromOffset(w, h), Position = opts.Position or UDim2.new(0.5, -w / 2, 0.5, -h / 2), BackgroundColor3 = c.black, BorderSizePixel = 0, Visible = false, Active = true}, self.gui)
     corner(frame, 8)
     local bg = mk("ImageLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.35}, frame)
     corner(bg, 8)
@@ -335,6 +335,7 @@ function Library:Window(opts)
     end
     function win:Destroy() frame:Destroy() end
     win.frame = frame
+    self._winFrame = frame
     if opts.Settings ~= false then buildSettings(self, win) end
     if self.fs then
         task.delay(1, function()
@@ -599,6 +600,7 @@ function Library:Popup(opts)
         corner(bb, 6)
         bb.Activated:Connect(function()
             self:Click()
+            if self._winFrame then self._winFrame.Visible = true end
             modal:Destroy()
             if bcb then bcb() end
         end)
