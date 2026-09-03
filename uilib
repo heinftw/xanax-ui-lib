@@ -62,7 +62,7 @@ function Library.new(opts)
         end
     end
     self.sfxOn = true
-    self.sfxVol = 0.6
+    self.sfxVol = opts.SfxVolume or 2
     self.sfx = Instance.new("Sound")
     self.sfx.SoundId = self.sfxId
     self.sfx.Volume = self.sfxVol
@@ -241,7 +241,7 @@ local function buildSettings(lib, win)
     end)
     s:Section("sound")
     s:Toggle("click sounds", true, function(v) lib.sfxOn = v end)
-    s:Slider("click volume", 0, 1, 0.6, function(v) lib.sfxVol = v end)
+    s:Slider("click volume", 0, 3, lib.sfxVol, function(v) lib.sfxVol = v end)
     s:Section("saved configs")
     s:Button("refresh list", function() refreshList() end)
     listFrame = mk("Frame", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1}, s.scroll)
@@ -285,9 +285,11 @@ function Library:Window(opts)
     bar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging, dragPos, startPos = true, input.Position, frame.Position
-            input.Changed:Connect(function()
-                if input.InputState == Enum.InputState.End then dragging = false end
-            end)
+        end
+    end)
+    uis.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
         end
     end)
     uis.InputChanged:Connect(function(input)
@@ -484,7 +486,11 @@ function Tab:Textbox(text, placeholder, cb)
     local box = mk("TextBox", {Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = self.lib.colors.off, PlaceholderText = placeholder or text, Text = "", FontFace = self.lib.font, TextSize = 13, TextColor3 = self.lib.colors.text, PlaceholderColor3 = self.lib.colors.sub, TextXAlignment = Enum.TextXAlignment.Left, ClearTextOnFocus = false, ClipsDescendants = true}, self.scroll)
     corner(box, 6)
     mk("UIPadding", {PaddingLeft = UDim.new(0, 10)}, box)
-    box.FocusGained:Connect(function() self.lib:Click() end)
+    box.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self.lib:Click()
+        end
+    end)
     box.FocusLost:Connect(function(enter)
         if cb then cb(box.Text, enter) end
     end)
