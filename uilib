@@ -18,7 +18,7 @@ local function fmt(v)
     return v % 1 == 0 and tostring(math.floor(v)) or string.format("%.1f", v)
 end
 
-local Library = {}
+local Library = {Version = "2.0"}
 Library.__index = Library
 
 local Tab = {}
@@ -60,7 +60,6 @@ function Library.new(opts)
             if ok and type(d) == "table" then self.meta = d end
         end
     end
-    self.sfxOn = true
     self.sfxVol = opts.SfxVolume or 2
     self.pool, self.poolIdx = {}, 1
     for i = 1, 8 do
@@ -85,7 +84,6 @@ function Library.new(opts)
 end
 
 function Library:Click()
-    if not self.sfxOn then return end
     local s = self.pool[self.poolIdx]
     self.poolIdx = self.poolIdx % #self.pool + 1
     s.Volume = self.sfxVol
@@ -123,10 +121,11 @@ function Library:_writeMeta()
 end
 
 function Library:SaveCfg(n)
-    if not self.fs then return false end
+    if not self.fs then return false, "no fs" end
     local data = {}
     for _, e in ipairs(self.elements) do data[e.label] = e.get() end
-    pcall(writefile, self:_cfgPath(n), http:JSONEncode(data))
+    local ok = pcall(writefile, self:_cfgPath(n), http:JSONEncode(data))
+    if not ok then return false, "encode failed" end
     self.meta.last = n
     self:_writeMeta()
     return true
@@ -170,15 +169,16 @@ local function buildSettings(lib, win)
     local cfgDrop = s:Dropdown("cfg", lib:_listCfgs())
     lib._cfgDrop = cfgDrop
     local function save(n, verb)
-        lib:SaveCfg(n)
+        local ok = lib:SaveCfg(n)
+        if not ok then lib:Notify({Title = "xanax", Body = "saving failed on your executor"}) return end
         lib.currentCfg = n
         cfgDrop.Refresh(lib:_listCfgs())
         cfgDrop.Set(n, true)
         lib:Notify({Title = "xanax", Body = ('%s "%s"'):format(verb or "saved", n)})
     end
     s:Button("save config", function()
-        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         local n = lib:_sanitize(nameBox.Text)
+        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         if n == "" then lib:Notify({Title = "xanax", Body = "type a name first"}) return end
         if isfile(lib:_cfgPath(n)) then
             lib:Popup({Title = "xanax", Sub = "hold on...", Body = ('are you sure you wanna overwrite "%s"?'):format(n), Buttons = {{"yes", function() save(n) end}, {"no"}}})
@@ -187,9 +187,9 @@ local function buildSettings(lib, win)
         end
     end)
     s:Button("load config", function()
-        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         local n = cfgDrop.Get()
-        if not n or n == "" or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "select a config first"}) return end
+        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
+        if not n or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "pick a cfg from the dropdown first"}) return end
         if lib:LoadCfg(n) then
             lib.currentCfg = n
             nameBox.Text = n
@@ -197,15 +197,15 @@ local function buildSettings(lib, win)
         end
     end)
     s:Button("overwrite current", function()
-        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         local n = lib.currentCfg
+        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         if not n then lib:Notify({Title = "xanax", Body = "save one first"}) return end
         lib:Popup({Title = "xanax", Sub = "hold on...", Body = ('are you sure you wanna overwrite "%s"?'):format(n), Buttons = {{"yes", function() save(n, "overwrote") end}, {"no"}}})
     end)
     s:Button("delete config", function()
-        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         local n = cfgDrop.Get()
-        if not n or n == "" or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "select a config first"}) return end
+        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
+        if not n or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "pick a cfg from the dropdown first"}) return end
         lib:Popup({Title = "xanax", Sub = "hold on...", Body = ('are you sure you wanna delete "%s"?'):format(n), Buttons = {{"yes", function()
             lib:DeleteCfg(n)
             if lib.currentCfg == n then lib.currentCfg = nil end
@@ -215,9 +215,9 @@ local function buildSettings(lib, win)
         end}, {"no"}}})
     end)
     s:Button("set as auto load", function()
-        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
         local n = cfgDrop.Get()
-        if not n or n == "" or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "select a config first"}) return end
+        if not lib.fs then lib:Notify({Title = "xanax", Body = "your executor can't save files"}) return end
+        if not n or not isfile(lib:_cfgPath(n)) then lib:Notify({Title = "xanax", Body = "pick a cfg from the dropdown first"}) return end
         if lib.meta.autoLoad == n then
             lib.meta.autoLoad = nil
             lib:_writeMeta()
@@ -232,7 +232,7 @@ local function buildSettings(lib, win)
     local uiBind = s:Bind("toggle ui", Enum.KeyCode.RightShift, function()
         if win.frame and win.frame.Parent then win.frame.Visible = not win.frame.Visible end
     end)
-    table.insert(lib.elements, {label = "toggle ui", kind = "bind", get = uiBind.Get, set = uiBind.Set})
+    table.insert(lib.elements, {label = "toggle ui", kind = "bind", get = function() return uiBind.Get().Name end, set = uiBind.Set})
 end
 
 function Library:Window(opts)
@@ -246,8 +246,9 @@ function Library:Window(opts)
     corner(bg, 8)
     local bar = mk("Frame", {Size = UDim2.new(1, 0, 0, 32), BackgroundColor3 = c.bar, BackgroundTransparency = 0.25, BorderSizePixel = 0}, frame)
     corner(bar, 8)
-    local ttl = mk("TextLabel", {Size = UDim2.new(1, -80, 1, 0), Position = UDim2.fromOffset(12, 0), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left}, bar)
+    local ttl = mk("TextLabel", {Size = UDim2.new(1, -110, 1, 0), Position = UDim2.fromOffset(12, 0), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left}, bar)
     self:addCycle(ttl)
+    mk("TextLabel", {Position = UDim2.new(1, -88, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1, Text = "v" .. Library.Version, FontFace = self.font, TextSize = 10, TextColor3 = c.sub}, bar)
     local minBtn = mk("TextButton", {Size = UDim2.fromOffset(24, 24), Position = UDim2.new(1, -56, 0.5, -12), BackgroundColor3 = c.off, Text = "-", FontFace = self.font, TextSize = 14, TextColor3 = c.text}, bar)
     corner(minBtn, 6)
     local closeBtn = mk("TextButton", {Size = UDim2.fromOffset(24, 24), Position = UDim2.new(1, -28, 0.5, -12), BackgroundColor3 = c.off, Text = "x", FontFace = self.font, TextSize = 14, TextColor3 = c.text}, bar)
@@ -255,7 +256,7 @@ function Library:Window(opts)
     local tabbar = mk("Frame", {Position = UDim2.fromOffset(8, 36), Size = UDim2.new(1, -16, 0, 26), BackgroundTransparency = 1}, frame)
     mk("UIListLayout", {FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center}, tabbar)
     local holder = mk("Frame", {Position = UDim2.fromOffset(8, 66), Size = UDim2.new(1, -16, 1, -74), BackgroundTransparency = 1, ClipsDescendants = true}, frame)
-    local grip = mk("Frame", {AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -2, 1, -2), Size = UDim2.fromOffset(18, 18), BackgroundTransparency = 1, Active = true, BorderSizePixel = 0}, frame)
+    local grip = mk("Frame", {AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -2, 1, -2), Size = UDim2.fromOffset(18, 18), BackgroundTransparency = 1, Active = true}, frame)
     mk("TextLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "◢", FontFace = self.font, TextSize = 14, TextColor3 = c.sub}, grip)
     local minimized = false
     minBtn.Activated:Connect(function()
@@ -264,7 +265,8 @@ function Library:Window(opts)
         tabbar.Visible = not minimized
         holder.Visible = not minimized
         grip.Visible = not minimized
-        ts:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = minimized and UDim2.fromOffset(frame.Size.X.Offset, 32) or frame.Size}):Play()
+        local target = minimized and UDim2.fromOffset(frame.Size.X.Offset, 32) or frame.Size
+        ts:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = target}):Play()
     end)
     closeBtn.Activated:Connect(function()
         self:Click()
@@ -450,7 +452,7 @@ function Tab:Dropdown(text, options, default, cb)
     local btn = mk("TextButton", {Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = c.off, Text = text .. ": " .. (current or ""), FontFace = self.lib.font, TextSize = 13, TextColor3 = c.text, ClipsDescendants = true}, box)
     corner(btn, 6)
     self.lib:addCycle(btn)
-    local list = mk("Frame", {Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, #options * 26), BackgroundTransparency = 1, Visible = false}, box)
+    local list = mk("Frame", {Position = UDim2.fromOffset(0, 34), Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, Visible = false}, box)
     mk("UIListLayout", {Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder}, list)
     local open = false
     local function apply(v, silent)
@@ -554,21 +556,22 @@ function Library:Notify(opts)
     local c = self.colors
     local holder = self.gui:FindFirstChild("_notifs")
     if not holder then
-        holder = mk("Frame", {Position = UDim2.new(1, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Size = UDim2.fromOffset(280, 400), BackgroundTransparency = 1}, self.gui)
+        holder = mk("Frame", {Position = UDim2.new(1, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), Size = UDim2.fromOffset(300, 400), BackgroundTransparency = 1}, self.gui)
         mk("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, VerticalAlignment = Enum.VerticalAlignment.Center, HorizontalAlignment = Enum.HorizontalAlignment.Right}, holder)
     end
-    local wrap = mk("Frame", {Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = 1}, holder)
-    local card = mk("Frame", {Size = UDim2.fromScale(1, 1), Position = UDim2.fromOffset(290, 0), BackgroundColor3 = c.black, BorderSizePixel = 0}, wrap)
+    local wrap = mk("Frame", {Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1}, holder)
+    local card = mk("Frame", {Size = UDim2.fromScale(1, 1), Position = UDim2.fromOffset(310, 0), BackgroundColor3 = c.black, BorderSizePixel = 0}, wrap)
     corner(card, 8)
     local bg = mk("ImageLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.5}, card)
     corner(bg, 8)
-    local ttl = mk("TextLabel", {Position = UDim2.fromOffset(12, 0), Size = UDim2.fromOffset(64, 1), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
+    local ttl = mk("TextLabel", {Position = UDim2.fromOffset(10, 0), Size = UDim2.fromOffset(70, 1), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
     self:addCycle(ttl)
-    mk("TextLabel", {Position = UDim2.fromOffset(80, 0), Size = UDim2.new(1, -92, 1, 0), BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 12, TextColor3 = c.text, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
-    ts:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(0, 0)}):Play()
+    mk("Frame", {Position = UDim2.fromOffset(84, 9), Size = UDim2.fromOffset(1, 16), BackgroundColor3 = c.track, BorderSizePixel = 0}, card)
+    mk("TextLabel", {Position = UDim2.fromOffset(92, 0), Size = UDim2.new(1, -102, 1, 0), BackgroundTransparency = 1, Text = opts.Body or "", FontFace = self.font, TextSize = 12, TextColor3 = c.text, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center, TextTruncate = Enum.TextTruncate.AtEnd}, card)
+    ts:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.fromOffset(0, 0)}):Play()
     task.delay(opts.Time or 4, function()
-        ts:Create(card, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.fromOffset(290, 0)}):Play()
-        task.wait(0.3)
+        ts:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.fromOffset(310, 0)}):Play()
+        task.wait(0.25)
         wrap:Destroy()
     end)
 end
@@ -576,13 +579,13 @@ end
 function Library:Popup(opts)
     local c = self.colors
     local modal = mk("Frame", {Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, BorderSizePixel = 0, Active = true, ZIndex = 10}, self.gui)
-    local pop = mk("Frame", {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(400, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = c.black, BorderSizePixel = 0, Active = true, ZIndex = 11}, modal)
+    local pop = mk("Frame", {Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(420, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = c.black, BorderSizePixel = 0, Active = true, ZIndex = 11}, modal)
     corner(pop, 10)
     local bg = mk("ImageLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = self.image, ImageTransparency = 0.5, ZIndex = 11}, pop)
     corner(bg, 10)
     mk("UIPadding", {PaddingLeft = UDim.new(0, 14), PaddingRight = UDim.new(0, 14), PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 12)}, pop)
     mk("UIListLayout", {Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center}, pop)
-    local ttl = mk("TextLabel", {Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 22, ZIndex = 12, LayoutOrder = 1}, pop)
+    local ttl = mk("TextLabel", {Size = UDim2.new(1, 0, 0, 22), BackgroundTransparency = 1, Text = opts.Title or self.gui.Name, FontFace = self.font, TextSize = 20, ZIndex = 12, LayoutOrder = 1}, pop)
     self:addCycle(ttl)
     if opts.Sub then
         mk("TextLabel", {Size = UDim2.new(1, 0, 0, 14), BackgroundTransparency = 1, Text = opts.Sub, FontFace = self.font, TextSize = 12, TextColor3 = c.sub, ZIndex = 12, LayoutOrder = 2}, pop)
