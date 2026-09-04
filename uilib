@@ -265,8 +265,11 @@ function Library:Window(opts)
         tabbar.Visible = not minimized
         holder.Visible = not minimized
         grip.Visible = not minimized
-        local target = minimized and UDim2.fromOffset(frame.Size.X.Offset, 32) or fullSize
-        ts:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = target}):Play()
+        if minimized then
+            frame.Size = UDim2.fromOffset(fullSize.X.Offset, 32)
+        else
+            frame.Size = fullSize
+        end
     end)
     closeBtn.Activated:Connect(function()
         self:Click()
