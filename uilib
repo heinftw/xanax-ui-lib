@@ -50,7 +50,7 @@ function Library.new(opts)
     self.elements = {}
     self.currentCfg = nil
     self.fs = (writefile and readfile and isfile and listfiles and isfolder and makefolder) and true or false
-    self.cfgFolder = opts.ConfigFolder or (self.gui.Name .. "_cfgs")
+    self.cfgFolder = (type(opts.ConfigFolder) == "string" and opts.ConfigFolder) or (self.gui.Name .. "_cfgs")
     self.metaPath = self.cfgFolder .. "/_meta.json"
     self.meta = {}
     if self.fs then
