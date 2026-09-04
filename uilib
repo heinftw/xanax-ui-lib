@@ -259,17 +259,19 @@ function Library:Window(opts)
     mk("TextLabel", {Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "◢", FontFace = self.font, TextSize = 14, TextColor3 = c.sub}, grip)
     local minimized = false
     local fullSize = frame.Size
+    local sizeTween = nil
+    local function setSize(target)
+        if sizeTween then sizeTween:Cancel() end
+        sizeTween = ts:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = target})
+        sizeTween:Play()
+    end
     minBtn.Activated:Connect(function()
         self:Click()
         minimized = not minimized
         tabbar.Visible = not minimized
         holder.Visible = not minimized
         grip.Visible = not minimized
-        if minimized then
-            frame.Size = UDim2.fromOffset(fullSize.X.Offset, 32)
-        else
-            frame.Size = fullSize
-        end
+        setSize(minimized and UDim2.fromOffset(frame.Size.X.Offset, 32) or fullSize)
     end)
     closeBtn.Activated:Connect(function()
         self:Click()
