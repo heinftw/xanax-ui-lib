@@ -3,7 +3,8 @@ local Players = game:GetService("Players")
 local RS = game:GetService("RunService")
 local LP = Players.LocalPlayer
 
-local Window = Library:Window({Title = "xanax hub", Width = 340, Height = 460})
+local lib = Library.new({Title = "xanax hub"})
+local Window = lib:Window({Title = "xanax hub", Width = 340, Height = 460})
 
 local Main = Window:Tab("main")
 local Misc = Window:Tab("misc")
@@ -87,4 +88,4 @@ Misc:Label("players: " .. #Players:GetPlayers())
 Misc:Paragraph("right shift to toggle this ui. configs are saved in the settings tab.")
 
 -- keybind
-Library:Popup({Title = "xanax", Sub = "welcome", Body = "this is xanax ui lib. check out the settings tab to save configs.", Buttons = {{"ok shhh"}}})
+lib:Popup({Title = "xanax", Sub = "welcome", Body = "this is xanax ui lib. check out the settings tab to save configs.", Buttons = {{"ok shhh"}}})

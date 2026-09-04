@@ -6,14 +6,15 @@ A clean, modern Roblox UI library with config saving, notifications, popups, and
 
 ```lua
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/heinftw/xanax-ui-lib/main/uilib"))()
-local Window = Library:Window({Title = "my hub", Width = 320, Height = 450})
+local lib = Library.new({Title = "my hub", Width = 320, Height = 450})
+local Window = lib:Window({Title = "my hub", Width = 320, Height = 450})
 local Tab = Window:Tab("main")
 ```
 
 ## Window
 
 ```lua
-Library:Window(opts)
+lib:Window(opts)
 ```
 
 | Option | Type | Default | Description |
@@ -120,7 +121,7 @@ Keybind picker. Registers for config saving.
 ## Notifications
 
 ```lua
-Library:Notify({Title = "xanax", Body = "saved successfully!", Time = 4})
+lib:Notify({Title = "xanax", Body = "saved successfully!", Time = 4})
 ```
 
 | Option | Type | Default | Description |
@@ -134,7 +135,7 @@ Slide-in from the right, auto-dismiss after `Time` seconds.
 ## Popup
 
 ```lua
-Library:Popup({
+lib:Popup({
     Title = "xanax",
     Sub = "hold on...",
     Body = "are you sure you wanna delete this?",
@@ -172,16 +173,16 @@ All toggles, sliders, dropdowns, binds, and textboxes auto-register for config s
 
 **Manual API:**
 ```lua
-Library:SaveCfg("myconfig")
-Library:LoadCfg("myconfig")
-Library:DeleteCfg("myconfig")
+lib:SaveCfg("myconfig")
+lib:LoadCfg("myconfig")
+lib:DeleteCfg("myconfig")
 ```
 
 ## Customization
 
 ### Colors
 ```lua
-Library:Window({
+local lib = Library.new({
     Black = Color3.fromRGB(0, 0, 0),
     Bar = Color3.fromRGB(15, 15, 15),
     Off = Color3.fromRGB(65, 65, 65),
@@ -195,7 +196,7 @@ Library:Window({
 
 ### Font & Image
 ```lua
-Library:Window({
+local lib = Library.new({
     Font = "rbxassetid://12187377325",
     Image = "rbxthumb://type=Asset&id=71976807018315&w=420&h=420",
 })
@@ -203,7 +204,7 @@ Library:Window({
 
 ### Sound
 ```lua
-Library:Window({
+local lib = Library.new({
     Sfx = "rbxassetid://124476359159008",
     SfxVolume = 2,
 })
